@@ -11,5 +11,5 @@ dotnet run -c Release
 
 Edit `games.lisp` in the repository root to choose which games to run. Game definitions are in `games/`, and graphics assets are in `resources/`.
 
-To search for policies, use an entry such as `(search "Football" (maxLength 8) (numSeeds 3) (steps 120))` in `games.lisp` and run
+To search for policies, use an entry such as `(search "ButtonCheeseCats" (maxLength 12) (numSeeds 10))` in `games.lisp` and run
 `dotnet run -c Release`. `maxLength` limits policy size; optional `minLength` defaults to 1. `steps` sets the simulation duration.
