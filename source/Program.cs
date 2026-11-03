@@ -226,7 +226,7 @@ static class Program
     {
         Raylib.SetTraceLogLevel(TraceLogLevel.Error);
         Raylib.SetConfigFlags(ConfigFlags.Msaa4xHint);
-        Raylib.InitWindow(Settings.SHX * Settings.SCALE, Settings.SHY * Settings.SCALE, "environment");
+        Raylib.InitWindow(Settings.SHX * Settings.SCALE, Settings.SHY * Settings.SCALE, "BeyondTheGrid");
 
         bool success = a.LoadGame();
         if (!success) return;

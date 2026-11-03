@@ -7,18 +7,5 @@
 obj/*
 .dotnet/*
 
-bin/*
-!bin/resources
-bin/resources/old
-bin/resources/emoji
-!bin/games
-bin/games/old*
-!bin/objects
-!bin/modes
-bin/modes/old*
-!bin/games.lisp
-!bin/reports
-bin/reports/old
-bin/reports/good/old
-!bin/cli
+bin/
 VIDEO/*

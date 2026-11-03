@@ -14,10 +14,10 @@ static class Evals
             foreach (string policy in agent.Policies()) prompt.AppendLine(policy);
             prompt.AppendLine("You're only allowed to use functions from Node.Grammar + sensors + creature functions.");
             prompt.AppendLine($"Notice that you cannot use arbitrary constants in this DSL, you can only use 'constant', which evaluates to {Game.constant}.");
-            prompt.AppendLine("To know your score, run Environment.exe with one or several policies as command line arguments. For example, Environment.exe \"(go (left (dir self)))\" \"(go (right (dir self)))\". Then the score will be printed into the console.");
-            prompt.AppendLine($"To aid you in your search, there is a powerful search tool. To use this tool, call something like Environment.exe \"(search (subtype ACTION) (shape (if (< constant (distance self cat)) SUB (go (maxDirection (rundist #0 Cat))))) (length 15))\", and then the tool will search all expressions up to length 15 and substitute them in place of SUB. What this means is that you can take a guess about a general shape of the policy, and let the search tool fill the gaps / unknown slots.");
-            prompt.AppendLine("In fact, the first action you should take (after familiarizing yourself with the DSL) is to do a broad search from the root: Environment.exe \"(search (subtype ACTION) (shape SUB))\", which will prints out the best expressions of each length. If you're unsure about the length, just don't specify it - the default parameter is going to be used.");
-            prompt.AppendLine("In addition to the action subexpressions, you can also search for BOOL subexpressions: Environment.exe \"(search (subtype BOOL) (shape (if SUB (go (from cat)) (go (maxDirection (rundist #0 Cat))))))\".");
+            prompt.AppendLine("To know your score, run BeyondTheGrid.exe with one or several policies as command line arguments. For example, BeyondTheGrid.exe \"(go (left (dir self)))\" \"(go (right (dir self)))\". Then the score will be printed into the console.");
+            prompt.AppendLine($"To aid you in your search, there is a powerful search tool. To use this tool, call something like BeyondTheGrid.exe \"(search (subtype ACTION) (shape (if (< constant (distance self cat)) SUB (go (maxDirection (rundist #0 Cat))))) (length 15))\", and then the tool will search all expressions up to length 15 and substitute them in place of SUB. What this means is that you can take a guess about a general shape of the policy, and let the search tool fill the gaps / unknown slots.");
+            prompt.AppendLine("In fact, the first action you should take (after familiarizing yourself with the DSL) is to do a broad search from the root: BeyondTheGrid.exe \"(search (subtype ACTION) (shape SUB))\", which will prints out the best expressions of each length. If you're unsure about the length, just don't specify it - the default parameter is going to be used.");
+            prompt.AppendLine("In addition to the action subexpressions, you can also search for BOOL subexpressions: BeyondTheGrid.exe \"(search (subtype BOOL) (shape (if SUB (go (from cat)) (go (maxDirection (rundist #0 Cat))))))\".");
             prompt.AppendLine("Another useful tool is antiPatterns. For example, in the search (search (subtype ACTION) (shape (if empty (if amAttacker (goto target) SUB) use)) (antiPatterns empty amAttacker) (length 5)), the SUB is under amAttacker and empty conditions - and we don't want SUB to include these expressions. AntiPatterns can be any expression that you don't want to see in SUB. Using antiPatterns makes the search space smaller.");
             prompt.AppendLine("You don't need to 'verify' search results, you can trust them, search uses the same evaluators as basic policy tests.");
             prompt.AppendLine("However, you cannot run multiple searches in parallel, as each search uses all CPU cores, and writes to the same file. You should only run searches sequentially.");
@@ -33,8 +33,8 @@ static class Evals
             foreach (string policy in agent.Policies()) prompt.AppendLine(policy);
             prompt.AppendLine("You're only allowed to use functions from Node.Grammar + sensors + creature functions.");
             prompt.AppendLine($"Notice that you cannot use arbitrary constants in this DSL, you can only use 'constant', which evaluates to {Game.constant}.");
-            prompt.AppendLine("To know your score, run Environment.exe with one or several policies as command line arguments. For example, Environment.exe \"(go (left (dir self)))\" \"(go (right (dir self)))\". Then the score will be printed into the console.");
-            prompt.AppendLine($"Please note that policy evaluation requires {numSeeds} rollouts, and that takes time - a common failure mode in this task is to give the Environment too many policies to evaluate, and it never finishes.");
+            prompt.AppendLine("To know your score, run BeyondTheGrid.exe with one or several policies as command line arguments. For example, BeyondTheGrid.exe \"(go (left (dir self)))\" \"(go (right (dir self)))\". Then the score will be printed into the console.");
+            prompt.AppendLine($"Please note that policy evaluation requires {numSeeds} rollouts, and that takes time - a common failure mode in this task is to give BeyondTheGrid too many policies to evaluate, and it never finishes.");
             prompt.AppendLine($"Remember that you are maximizing the minimum score across {numSeeds} seeds, and not the average score.");
             prompt.AppendLine("Do not read, list, search, or reference anything outside the current working folder.");
             prompt.AppendLine("After the task is done, document your approach / strategy and search history / discoveries in REPORT.md, just a few paragraphs. This report file is the ONLY file you're allowed to modify.");
@@ -46,8 +46,8 @@ static class Evals
             prompt.AppendLine("You can learn this DSL by looking at Node.cs and Script.cs. Here are also some example policies, so you would understand the DSL syntax:");
             foreach (string policy in game.agentTemplate.Policies()) prompt.AppendLine(policy);
             prompt.AppendLine($"You can also check previously discovered best policies in disc-{game.name}.lisp. Don't forget that you can define values using 'let'.");
-            prompt.AppendLine("To know your score, run Environment.exe with one or several policies as command line arguments. For example, Environment.exe \"(go (left (dir self)))\" \"(go (right (dir self)))\". Then the score will be printed into the console.");
-            prompt.AppendLine($"Please note that policy evaluation requires {numSeeds} rollouts, and that takes time - a common failure mode in this task is to give the Environment too many policies to evaluate, and it never finishes.");
+            prompt.AppendLine("To know your score, run BeyondTheGrid.exe with one or several policies as command line arguments. For example, BeyondTheGrid.exe \"(go (left (dir self)))\" \"(go (right (dir self)))\". Then the score will be printed into the console.");
+            prompt.AppendLine($"Please note that policy evaluation requires {numSeeds} rollouts, and that takes time - a common failure mode in this task is to give BeyondTheGrid too many policies to evaluate, and it never finishes.");
             prompt.AppendLine($"Remember that you are maximizing the minimum score across {numSeeds} seeds, and not the average score.");
             prompt.AppendLine("Do not read, list, search, or reference anything outside the current working folder.");
             prompt.AppendLine("After the task is done, document your approach / strategy and search history / discoveries in REPORT.md, just a few paragraphs. This report file is the ONLY file you're allowed to modify.");
@@ -69,7 +69,7 @@ static class Evals
         foldername += tool ? "tool" : "simple";
         Directory.CreateDirectory(foldername);
 
-        string[] fs = ["Environment.exe", "Environment.dll", "Environment.runtimeconfig.json", "../Node.cs", "../Script.cs"];
+        string[] fs = ["BeyondTheGrid.exe", "BeyondTheGrid.dll", "BeyondTheGrid.runtimeconfig.json", "../Node.cs", "../Script.cs"];
         foreach (string f in fs) File.Copy(f, $"{foldername}/{Path.GetFileName(f)}", overwrite: true);
 
         (Game game, string gamecode) = Game.LoadFromFile(gameName);

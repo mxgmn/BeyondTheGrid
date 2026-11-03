@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Exe</OutputType>
+        <AssemblyName>BeyondTheGrid</AssemblyName>
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
@@ -13,12 +14,10 @@
     </PropertyGroup>
   
     <ItemGroup>
-      <Content Include="bin\discoveries.xml" />
-      <Content Include="bin\games.lisp" />
-    </ItemGroup>
-    <ItemGroup>
-      <None Include="bin\resources\shader.c" />
-      <None Include="bin\resources\rayIntersect.c" />
+      <None Update="games.lisp;games\**\*;resources\**\*">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>
