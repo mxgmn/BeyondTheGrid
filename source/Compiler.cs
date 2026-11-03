@@ -25,6 +25,7 @@
     public static Script Run(Expression e, int root)
     {
         if (e.error != null) return Error(e.error);
+        if (e.Contains(root, OP.SUB)) return Error("Cannot compile an unfilled SUB; supply a replacement expression first");
         Compiler compiler = new();
         compiler.Compile(e, root);
         compiler.Emit(OP.RETURN);
@@ -59,6 +60,7 @@
 
             PatchJump(jumpFalseIndex, opList.Count); ///patch: now we know where the Else block starts
             if (node.ch.Length > 2) Compile(e, node.ch[2]); ///compile "Else" block
+            else if (op == OP.IF_U) Emit(OP.PASS);
             PatchJump(jumpEndIndex, opList.Count); ///patch: now we know where the End is
         }
         else if (op == OP.MARKOV) //нужно когда-то написать комменты, как это работает. Каких-то вещей я до сих пор не понимаю: например, можно ли тут сделать автоматическую оптимизацию матчинга
@@ -99,7 +101,7 @@
             for (int i = 0; i < node.ch.Length; i++)
             {
                 Compile(e, node.ch[i]);
-                if (e.GetType(node.ch[i]) != TYPE.VOID) Emit(OP.POP);
+                if (i < node.ch.Length - 1 && e.GetType(node.ch[i]) != TYPE.VOID) Emit(OP.POP);
             }
         }
         else if (op == OP.EXISTS)

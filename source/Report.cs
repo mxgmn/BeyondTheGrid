@@ -1,10 +1,12 @@
 ﻿using System.Text;
 
+using System.Security;
+
 class GameReport
 {
     public string gamename, result;
 
-    public GameReport(string gamename, PolicyResult[] flat, PolicyResult[] bestPolicies, long elapsedms, int numSeeds, int numSteps, int numRollouts, long totalFrames, string[] storageNames, List<Template> templates)
+    public GameReport(string gamename, PolicyResult[] flat, PolicyResult[] bestPolicies, long elapsedms, int numSeeds, int numSteps, int numRollouts, long totalFrames, string[] storageNames, List<Template> templates, Expression sketch = null)
     {
         List<PolicyResult>[] bags = new List<PolicyResult>[bestPolicies.Length];
         for (int i = 0; i < bags.Length; i++) bags[i] = [];
@@ -17,17 +19,19 @@ class GameReport
         this.gamename = gamename;
         StringBuilder sb = new();
 
-        sb.AppendLine($"<game name=\"{gamename}\" maxlength=\"{bags.Length}\" time=\"{elapsedms / 1000f:0.#}\" timePerSimulation=\"{(float)elapsedms / numRollouts:0.00}\" steps=\"{numSteps}\" numSeeds=\"{numSeeds}\" numPolicies=\"{flat.Length}\" numRollouts=\"{numRollouts}\" rolloutsPerPolicy=\"{(float)numRollouts / flat.Length:0.00}\" averageFrames=\"{(numRollouts == 0 ? 0 : (double)totalFrames / numRollouts):0.##}\">");
+        sb.AppendLine($"<game name=\"{SecurityElement.Escape(gamename)}\" maxlength=\"{bags.Length}\" time=\"{elapsedms / 1000f:0.#}\" timePerSimulation=\"{(numRollouts == 0 ? 0 : (float)elapsedms / numRollouts):0.00}\" steps=\"{numSteps}\" numSeeds=\"{numSeeds}\" numPolicies=\"{flat.Length}\" numRollouts=\"{numRollouts}\" rolloutsPerPolicy=\"{(flat.Length == 0 ? 0 : (float)numRollouts / flat.Length):0.00}\" averageFrames=\"{(numRollouts == 0 ? 0 : (double)totalFrames / numRollouts):0.##}\">");
+        if (sketch != null) sb.AppendLine($"  <sketch text=\"{SecurityElement.Escape(sketch.ToString(storageNames, templates))}\" lengthUnit=\"subexpression\"/>");
         sb.AppendLine("  <histogram>");
 
         for (int l = 0; l < bags.Length; l++)
         {
             List<PolicyResult> bag = bags[l];
             sb.Append($"    <item length=\"{l + 1}\" numPolicies=\"{bag.Count}\"");
-            if (bag.Count > 0)
+            if (bestPolicies[l] != null)
             {
                 PolicyResult best = bestPolicies[l];
-                sb.Append($" bestScore=\"{best.minScore:0.##}\" bestPolicy=\"{best.ToString(storageNames, templates)}\" scores=\"{best.Join()}\"");
+                sb.Append($" bestScore=\"{best.minScore:0.##}\" bestPolicy=\"{SecurityElement.Escape(best.ToString(storageNames, templates))}\" scores=\"{best.Join()}\"");
+                if (best.sketch != null) sb.Append($" bestSubexpression=\"{SecurityElement.Escape(best.Fragment(storageNames, templates))}\" subexpressionLength=\"{best.length}\"");
             }
             sb.AppendLine("/>");
         }
@@ -44,7 +48,7 @@ class GameReport
                 foreach (float f in e.scores) join += $"{f:0.##} ";
                 join = join[..^1];
 
-                sb.AppendLine($"    <policy n=\"{i}\" minscore=\"{e.minScore:0.##}\" text=\"{e.ToString(storageNames, templates)}\" length=\"{e.length}\" scores=\"{join}\"/>");
+                sb.AppendLine($"    <policy n=\"{i}\" minscore=\"{e.minScore:0.##}\" text=\"{SecurityElement.Escape(e.ToString(storageNames, templates))}\" length=\"{e.length}\" scores=\"{join}\"/>");
                 bestAverage = e.minScore;
             }
         }
@@ -78,14 +82,14 @@ class GameReport
             for (int i = 0; i < flat.Length; i++)
             {
                 PolicyResult e = flat[i];
-                if (e.length < bestPolicies.Length) sb.AppendLine($"    <policy score=\"{e.minScore}\" text=\"{e.ToString(null, templates)}\"/>");
+                if (e.length < bestPolicies.Length) sb.AppendLine($"    <policy score=\"{e.minScore}\" text=\"{SecurityElement.Escape(e.ToString(null, templates))}\"/>");
             }
             sb.AppendLine("  </training>");
             sb.AppendLine("  <validation>");
             for (int i = 0; i < flat.Length; i++)
             {
                 PolicyResult e = flat[i];
-                if (e.length == bestPolicies.Length) sb.AppendLine($"    <policy score=\"{e.minScore}\" text=\"{e.ToString(null, templates)}\"/>");
+                if (e.length == bestPolicies.Length) sb.AppendLine($"    <policy score=\"{e.minScore}\" text=\"{SecurityElement.Escape(e.ToString(null, templates))}\"/>");
             }
             sb.AppendLine("  </validation>");
         }
@@ -120,12 +124,14 @@ class GameReport
     {
         if (reports.Count == 0) return;
 
+        Directory.CreateDirectory("reports");
+
         string result = "";
         if (reports.Count > 1) result += "<games>" + Environment.NewLine;
         foreach (GameReport report in reports) result += report.result;
         if (reports.Count > 1) result += "</games>" + Environment.NewLine;
 
-        string timestamp = DateTime.Now.ToString("yyyy-MM-dd-HHmm");
+        string timestamp = DateTime.Now.ToString("yyyy-MM-dd-HHmmss-fffffff");
         string filename = $"{timestamp}-{reports[0].gamename}-{reports[^1].gamename}";
         if (reports.Count == 1) filename = $"{timestamp}-{reports[0].gamename}";
         File.WriteAllText($"reports/{filename}.xml", result);

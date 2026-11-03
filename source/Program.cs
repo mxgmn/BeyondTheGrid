@@ -47,29 +47,41 @@ static class Settings
 
     public const int MAX_SUB_LENGTH = 3, MAX_PRINTED_EXPRESSION_LENGTH = 11;
     public const OP DEBUG_OP = OP.SEQ; ///set to SEQ to print everything
-    public const float AGENT_TIMEOUT = 30f;
+    public const float AGENT_TIMEOUT = 20f;
 }
 
 static class Program
 {
     static void Main(string[] args)
     {
+        try { Run(args); }
+        catch (Exception error) when (error is ArgumentException or InvalidOperationException or FormatException or IOException)
+        {
+            Console.Error.WriteLine($"ERROR: {error.Message}");
+            Environment.ExitCode = 1;
+        }
+    }
+
+    static void Run(string[] args)
+    {
         string gamesText = File.ReadAllText("games.lisp");
         (Expr xroot, string gamesError) = Expr.Load($"(games {gamesText})");
         if (gamesError != null)
         {
             Console.WriteLine(gamesError);
+            Environment.ExitCode = 1;
             return;
         }
 
         Expr[] xargs = null;
-        if (xroot.children[0].head == "args") xargs = xroot.children[0].children;
+        if (xroot.children.Length > 0 && xroot.children[0].head == "args") xargs = xroot.children[0].children;
         else if (args.Length > 0)
         {
             const string LOGFILE = "log.lisp";
-            if (File.Exists(LOGFILE) && DateTime.UtcNow - File.GetCreationTimeUtc(LOGFILE) > TimeSpan.FromMinutes(Settings.AGENT_TIMEOUT))
+            int timeLimit = xroot.Children("test").FirstOrDefault()?.GetInt("timeLimitMinutes", 0) ?? 0;
+            if (timeLimit > 0 && File.Exists(LOGFILE) && DateTime.UtcNow - File.GetCreationTimeUtc(LOGFILE) > TimeSpan.FromMinutes(timeLimit))
             {
-                Console.WriteLine($"Time ({Settings.AGENT_TIMEOUT} minutes) is up. Thank you for your effort. Your discoveries have been saved, you can stop now.");
+                Console.WriteLine($"Time ({timeLimit} minutes) is up. Your discoveries have been saved.");
                 return;
             }
 
@@ -85,101 +97,42 @@ static class Program
                 if (error != null)
                 {
                     Console.WriteLine($"ARGUMENT ERROR: {error}");
+                    Environment.ExitCode = 1;
                     return;
                 }
             }
         }
 
         Expr[] realGames = xroot.Children("real");
-        Expr[] prepareGames = xroot.Children("prepare");
         Expr[] testGames = xroot.Children("test");
         Expr[] searchGames = xroot.Children("search");
+        Expr[] prepareGames = xroot.Children("prepare");
 
         if (xargs != null)
         {
-            if (xargs[0].head == "search")
+            if (xargs.Length == 0) throw new ArgumentException("Supply a policy or a search expression");
+            if (testGames.Length == 0)
             {
-                if (xargs.Length != 1)
-                {
-                    Console.WriteLine("if search is done, it should only be for a single policy");
-                    return;
-                }
-                Expr xarg = xargs[0];
-                Expr xshape = xarg.GetExpr("shape");
-                Expr xgame = testGames[0]; ///this way we don't need to prepare specifically for search
-
-                string gameName = xgame.children[0].head;
-                Game game = Game.LoadFromFile(gameName).game;
-                if (game.error != null)
-                {
-                    Console.WriteLine(game.error);
-                    return;
-                }
-                Template agent = game.templates[game.agentTemplate];
-
-                //string subType = xarg.GetString("subtype", "ACTION");
-                //if (subType == "ACTION") Settings.SUBTYPE = TYPE.TUPLE;
-                //else if (subType == "BOOL") Settings.SUBTYPE = TYPE.BOOL;
-                //else
-                //{
-                //    Console.WriteLine($"ERROR: unsupported sub stype <{subType}>");
-                //    return;
-                //}
-
-                Expr xpatterns = xarg.Child("antiPatterns");
-                Expression[] patterns;
-                if (xpatterns != null)
-                {
-                    patterns = new Expression[xpatterns.children.Length];
-                    for (int i = 0; i < xpatterns.children.Length; i++)
-                    {
-                        Expr xpattern = xpatterns.children[i];
-                        Expression e = Expression.Create(xpattern, agent.env, game, []);
-                        if (e.error != null)
-                        {
-                            Console.WriteLine($"cannot load pattern {xpattern}: {e.error}");
-                            return;
-                        }
-                        patterns[i] = e;
-                    }
-                }
-                else patterns = [];
-
-                int steps = xgame.GetInt("steps", 3600);
-                int numSeeds = xgame.GetInt("numSeeds", 5);
-                int length = xgame.GetInt("length", 10);
-                length = xarg.GetInt("length", length);
-
-                Expression eshape = Expression.Create(xshape, agent.env, game, []);
-                if (eshape.error != null)
-                {
-                    Console.WriteLine($"SHAPE ERROR: {eshape.error}");
-                    return;
-                }
-
-                agent.epolicy = eshape;
-                (Codon, TYPE)[] grammar = Record.Grammar(agent, game.templates);
-                Search.BottomUp(game, 1, length, grammar, numSeeds, steps, patterns);
+                Console.Error.WriteLine("Command-line evaluation or search requires a (test \"Game\") entry in games.lisp.");
+                Environment.ExitCode = 1;
                 return;
             }
-            else
+            if (xargs.Any(a => a.head == "search"))
             {
-                Evals.Test(testGames[0], xargs); //this goes to the special procedure
-                return;
+                if (xargs.Length != 1) throw new ArgumentException("Pass one search expression per invocation");
+                Evals.SearchSketch(testGames[0], xargs[0]);
             }
+            else Evals.Test(testGames[0], xargs);
+            return;
         }
+
+        foreach (Expr xgame in prepareGames) Evals.Prepare(xgame);
 
         if (realGames.Length > 0)
         {
             Interactive(new AppState(realGames));
             return;
         }
-        if (prepareGames.Length > 0)
-        {
-            foreach (Expr xgame in prepareGames) Evals.Prepare(xgame);
-            return;
-        }
-
         foreach (Expr xgame in testGames) Evals.Test(xgame, null);
 
         if (searchGames.Length > 0)

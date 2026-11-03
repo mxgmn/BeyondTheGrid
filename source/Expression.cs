@@ -22,6 +22,7 @@ partial class Expression : Error
     public List<Node> nodes;
     public List<float> floats;
     public List<string> strings;
+    TYPE subType = TYPE.UNKNOWN;
 
     public Expression()
     {
@@ -40,9 +41,9 @@ partial class Expression : Error
         return nodes.Count - 1;
     }
 
-    public static Expression Create(Expr expr, Env<TYPE> env, Game game, TYPE[] db)
+    public static Expression Create(Expr expr, Env<TYPE> env, Game game, TYPE[] db, TYPE subType = TYPE.UNKNOWN)
     {
-        Expression result = new();
+        Expression result = new() { subType = subType };
         result.Load(expr, env, game, db);
         return result;
     }
@@ -58,7 +59,13 @@ partial class Expression : Error
         (int storageIndex, TYPE has) = env.Has(expr.head);
         int templateIndex = game.templates.FindIndex(t => t.name == expr.head);
 
-        if (expr.head == "=")
+        if (expr.head == "SUB")
+        {
+            if (expr.children.Length != 0) return Error("SUB must be a leaf expression");
+            if (subType == TYPE.UNKNOWN) return Error("SUB requires a typed search shape or a (sub ...) expression");
+            return Add(new(OP.SUB, db.Length, []) { otype = subType });
+        }
+        else if (expr.head == "=")
         {
             if (expr.children.Length != 2) return Error($"wrong let syntax: <{expr}>");
             if (expr.children[0].children.Length > 0) return Error($"first argument <{expr.children[0]}> in let should just be a variable name");
@@ -84,7 +91,8 @@ partial class Expression : Error
                 if (nodes[ch[0]].otype != TYPE.BOOL) return Error($"the first arg to if in <{expr}> should be bool");
                 if (nodes[ch[1]].otype != TYPE.TUPLE && nodes[ch[1]].otype != TYPE.VOID && nodes[ch[1]].otype != TYPE.OBJECT) return Error($"the second arg to if in <{expr}> should be action/tuple, not {nodes[ch[1]].otype}");
                 if (ch.Length >= 3 && nodes[ch[2]].otype != TYPE.TUPLE && nodes[ch[2]].otype != TYPE.VOID) return Error($"the third arg {ToString(ch[2], null, game.templates)} in <{expr}> should be action/tuple, not {nodes[ch[2]].otype}");
-                return Add(new(OP.IF, -1, ch));
+                bool action = nodes[ch[1]].otype == TYPE.TUPLE && (ch.Length == 2 || nodes[ch[2]].otype == TYPE.TUPLE);
+                return Add(new(action ? OP.IF_U : OP.IF, -1, ch));
             }
             else if (expr.children.Length >= 4)
             {
@@ -107,6 +115,7 @@ partial class Expression : Error
                     if (error != null) return -1;
                     itypes[i] = nodes[ch[i]].otype;
                 }
+                if (itypes.Any(t => t != TYPE.BOOL)) return Error($"{expr.head} requires Boolean arguments in {expr}");
                 return Add(new(expr.head == "and" ? OP.AND : OP.OR, -1, ch));
             }
             else if (expr.children.Length >= 3)
@@ -148,7 +157,7 @@ partial class Expression : Error
                     ch[i] = Load(expr.children[i], env, game, db);
                     if (error != null) return -1;
                 }
-                return Add(new(OP.SEQ, -1, ch));
+                return Add(new(OP.SEQ, -1, ch) { otype = nodes[ch[^1]].otype });
             }
         }
         else if (expr.head == "markov")
@@ -195,6 +204,7 @@ partial class Expression : Error
         }
         else if (expr.head == "exists")
         {
+            if (expr.children.Length != 2) return Error($"exists requires a predicate and a list: {expr}");
             int e0 = Load(expr.children[0], env, game, [.. db, TYPE.OBJECT]);
             if (error != null) return -1;
             if (nodes[e0].otype != TYPE.BOOL) return Error($"second argument in exists should be bool (predicate), not {nodes[e0].otype}: {expr}");
@@ -306,7 +316,7 @@ partial class Expression : Error
             strings.Add(expr.head);
             return Add(new(OP.STRING, strings.Count - 1, []));
         }
-        else if (float.TryParse(expr.head, out float f))
+        else if (float.TryParse(expr.head, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out float f))
         {
             if (expr.children.Length > 0) return Error($"constants cannot have arguments {expr}");
             floats.Add(f);
@@ -327,9 +337,6 @@ partial class Expression : Error
             Record record = Record.Find(expr.head, itypes);
             if (record == null)
             {
-#if DEBUG
-                throw new Exception($"cannot match <{expr}>");
-#endif
                 return Error($"cannot match <{expr}>");
             }
             return Add(new(record.op, -1, ch));
@@ -367,9 +374,11 @@ partial class Expression : Error
     public string ToString(int id, string[] storageNames, List<Template> templates)
     {
         Node node = nodes[id];
-        // Keep the existing printed form of literals; their operands now index constant arrays.
-        int variant = node.op == OP.FLOAT || node.op == OP.STRING ? 0xff : node.opvariant;
-        string name = node.op == OP.TEMPLATE && templates != null ? templates[variant].name : storageNames == null ? Record.ToString(node.op, variant) : Record.ToString(node.op, variant, storageNames);
+        if (node.op == OP.FLOAT) return floats[node.opvariant].ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+        if (node.op == OP.STRING) return $"\"{strings[node.opvariant]}\"";
+        if (node.op == OP.TILE_VALUE) return $"\"{MJ.dict.First(p => p.Value == node.opvariant).Key}\"";
+        int variant = node.opvariant;
+        string name = node.op == OP.SEQ ? "seq" : node.op == OP.TEMPLATE && templates != null ? templates[variant].name : storageNames == null ? Record.ToString(node.op, variant) : Record.ToString(node.op, variant, storageNames);
         return node.ch.Length == 0 ? name : $"({name} {string.Join(' ', node.ch.Select(c => ToString(c, storageNames, templates)))})";
     }
     public string ToString(int id) => ToString(id, null, null);

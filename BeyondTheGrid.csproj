@@ -18,6 +18,10 @@
         <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       </None>
+      <None Include="source\*.cs" Link="dsl\%(Filename)%(Extension)">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </None>
     </ItemGroup>
 
     <ItemGroup>
@@ -27,6 +31,8 @@
     <ItemGroup>
       <Compile Remove="VIDEO\**\*.cs" />
       <Compile Remove="tests\**\*.cs" />
+      <Compile Remove="evals\**\*.cs" />
+      <None Remove="evals\**\*" />
       <InternalsVisibleTo Include="BeyondTheGrid.GameChecks" />
     </ItemGroup>
 

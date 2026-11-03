@@ -1,6 +1,6 @@
 ﻿enum OP
 {
-    IF, FOR, SEQ, ///not an instruction, cannot occur in a script
+    IF, FOR, SEQ, SUB, ///not an instruction, cannot occur in a script
 
     DBVAR, DECREMENT, POP, DUP, STORE, JUMP, JUMP_IF_FALSE_B, JUMP_IF_FALSE_F, ///F-версия используется для for
     RETURN,
@@ -8,7 +8,7 @@
     FLOAT, STRING, TEMPLATE, LOAD,
     FOREACH, RANDOM, DAMAGE, SPEED, MARKOV, ///special
     PUTON, DROP, DESTROY, THROW, POSITION_FF, POSITION_V, STUN, REWARD, CREATE, VOX, RECT, PAR, SETSIZE, ///return Void
-    TURN, GO, BACK, GOTO, USE, IF_U, ///return Tuple
+    TURN, GO, BACK, GOTO, USE, IF_U, PASS, ///return Tuple
     FALSE, TRUE, COIN, NOT, EEQ_O, EEQ_T, EEQ_F, NEAR, HAS_VELOCITY, AND, OR, LESS, LESSEQ, ALIGNED, SEES, APPLY, CHANGE_TILE_TO, IS_RESOURCE, IS_CREATURE, PROXIMITY_SENSOR, EXISTS, ///return Bool
     
     AMOUNT, DOTPRODUCT, ALIGNMENT_VV, OPP_F, PLUS_FF, MINUS_FF, MULT_FF, DIV_FF, POWER, SQUARE, UNIFORM, AREA, X, Y, MASS, LENGTH, DISTANCE_OO, PROJDIST, RUNDIST, RAYDIST, GAP, CONSTANT, X2_F, X2_V, TILE, ///return Float
@@ -102,6 +102,7 @@ class Record
         new Record(OP.GOTO, "o", 'u', "goto"),
         new Record(OP.USE, "", 'u', "use"),
         new Record(OP.IF_U, "buu", 'u', "if"),
+        new Record(OP.PASS, "", 'u', "pass"), // Default action for an omitted else branch; not in the search grammar.
 
         ///return Bool
         new Record(OP.FALSE, "", 'b', "false"),
@@ -192,6 +193,7 @@ class Record
         ///return Unknown
         new Record(OP.LOAD, "", '!', "LOAD"),
         new Record(OP.DBVAR, "", '!', "DBVAR"),
+        new Record(OP.SUB, "", '!', "SUB"),
     ];
 
     public static string ToString(OP op, int opvariant)

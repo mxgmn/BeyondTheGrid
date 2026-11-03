@@ -44,6 +44,8 @@ class Template
         visionCos = -1f; ///-1 means that everything is visible
         hearingRad = 0.75f; ///objects inside the hearing radius are visible even if they are outside of the cone of vision
 
+        Expr policyShape = null;
+
         for (int n = 1; n < xtemplate.children.Length; n++) ///start with 1 because name is already known
         {
             Expr xtop = xtemplate.children[n];
@@ -132,6 +134,8 @@ class Template
             else if (xtop.head == "seq" || xtop.head == "if" || xtop.head == "turn" || xtop.head == "go" || xtop.head == "goto" || xtop.head == "SUB")
             {
                 if (epolicy != null) CS.WriteLine($"WARNING: Overwriting policy shape for {name}", ConsoleColor.DarkYellow);
+                policyShape = xtop.Contains("SUB") ? xtop : null;
+                if (policyShape != null) continue;
                 epolicy = Expression.Create(xtop, env, game, []);
                 if (epolicy.error != null) return epolicy.error;
             }
@@ -193,14 +197,19 @@ class Template
             else throw new Exception($"unknown head <{xtop.head}> of length {xtop.head.Length} in template: {xtop}");
         }
 
-        if (esub != null) ///epolicy просто означает, что в темплейте задана политика
+        if (policyShape != null)
         {
+            if (esub == null) return $"{name} policy contains SUB but has no (sub ...) expression";
+            epolicy = Expression.Create(policyShape, env, game, [], esub.GetType(esub.nodes.Count - 1));
+            if (epolicy.error != null) return epolicy.error;
+            epolicy = epolicy.Substitute(esub, esub.nodes.Count - 1);
             policy = Compiler.Run(epolicy);
             if (policy.error != null) return $"error compiling {name} policy: <{policy.error}>";
         }
         else if (epolicy != null)
         {
             policy = Compiler.Run(epolicy);
+            if (policy.error != null) return $"error compiling {name} policy: <{policy.error}>";
             CS.WriteLine($"{name} policy = {policy}", ConsoleColor.Cyan);
         }
         if (patterns == null) patterns = [];

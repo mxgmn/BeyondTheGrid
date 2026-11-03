@@ -98,6 +98,7 @@ class Script : Error
                 case OP.STRING: stack.Push(Value.StringValue(opvariant)); break;
                 case OP.TEMPLATE: stack.Push(Value.TemplateValue(opvariant)); break;
                 case OP.LOAD: stack.Push(storage[opvariant]); break;
+                case OP.PASS: stack.Push(Value.PASS); break;
                 case OP.TURN: stack.Push(Value.TupleValue(0, false, stack.Pop().v)); break;
                 case OP.BACK: stack.Push(Value.TupleValue(-1, false, Vector2.Zero)); break;
                 case OP.FALSE: stack.Push(Value.FALSE); break;
