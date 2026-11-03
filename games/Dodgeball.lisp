@@ -1,5 +1,5 @@
 (template Ball 🏐 (sphere 0.4) (color "fff1e8")
-	(onCollisionWith
+	(onCollision
 		(if
 			(Citizen #0) (reward 1.0)
 			(Thrower #0) (putOn self #0)

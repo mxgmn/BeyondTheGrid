@@ -4,7 +4,7 @@
 	(cylinder 0.5 0.3)
 	(color "442434")
 
-	(onCollisionWith (if (Cheese #0) (seq (destroy #0) (reward 1.0) (create Cheese))))
+	(onCollision (if (Cheese #0) (seq (destroy #0) (reward 1.0) (create Cheese))))
 
 	(sensor goal (closest self Cheese all))
 	(sensor s (sees self goal))

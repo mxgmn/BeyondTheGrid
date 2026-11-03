@@ -1,8 +1,11 @@
-(template Button 🔘 (cylinder 0.4 0.25) (color "ff004d"))
+(template Button 🔘 (cylinder 0.4 0.25) (color "ff004d")
+	(onCollision (reward 1.0))
+)
 
 (template Mouse 🐭
 	(sphere 0.3)
 	(color "fff1e8")
+	(onCollision (if (Cat #0) (damage self 1.0 #0)))
 
 	(sensor button (closest self Button all))
 	(sensor cat (closest self Cat all))
@@ -40,20 +43,9 @@
 	)
 )
 
-(onCollision
-	(if
-		(Button #1)
-		(reward 1.0)
-
-		(and (Mouse #0) (Cat #1))
-		(damage #0 1.0 #1)
-	)
-)
-
 (player Mouse)
-(define hsize 4.5)
-(setsize (x2 hsize) (x2 hsize))
+(setsize 9 9)
 
 (position (create Button) 0 0)
-(position (create Mouse) (uniform (- hsize) -1.0) (uniform (- hsize) hsize))
-(for 5 (position (create Cat) (uniform 1.0 hsize) (uniform (- hsize) hsize)))
+(position (create Mouse) (uniform -4.5 -1.0) (uniform -4.5 4.5))
+(for 5 (position (create Cat) (uniform 1.0 4.5) (uniform -4.5 4.5)))

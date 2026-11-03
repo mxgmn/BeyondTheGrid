@@ -1,8 +1,11 @@
-(template Cheese 🧀 (cylinder 0.3 0.2) (color "ffec27"))
+(template Cheese 🧀 (cylinder 0.3 0.2) (color "ffec27")
+	(onCollision (if (Mouse #0) (seq (destroy self) (reward 1.0) (create Cheese))))
+)
 
 (template Mouse 🐭
 	(sphere 0.3)
 	(color "fff1e8")
+	(onCollision (if (Cat #0) (damage self 1.0 #0)))
 
 	(sensor cheese (closest self Cheese all))
 	(sensor cat (closest self Cat all))
@@ -37,16 +40,6 @@
 			(and chase (!= none prey)) (goto prey)
 			(go randomDirection)
 		)
-	)
-)
-
-(onCollision
-	(if
-		(and (Cheese #0) (Mouse #1))
-		(seq (destroy #0) (reward 1.0) (create Cheese))
-
-		(and (Mouse #0) (Cat #1))
-		(damage #0 1.0 #1)
 	)
 )
 

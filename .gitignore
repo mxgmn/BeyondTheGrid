@@ -4,8 +4,9 @@
 *.pdb
 
 .vs/*
-obj/*
+obj/
 .dotnet/*
 
 bin/
+/tests/
 VIDEO/*

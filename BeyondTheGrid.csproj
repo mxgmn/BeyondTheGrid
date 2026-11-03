@@ -26,6 +26,8 @@
 
     <ItemGroup>
       <Compile Remove="VIDEO\**\*.cs" />
+      <Compile Remove="tests\**\*.cs" />
+      <InternalsVisibleTo Include="BeyondTheGrid.GameChecks" />
     </ItemGroup>
 
     <Target Name="RemoveUnwantedRuntimes" AfterTargets="Build">

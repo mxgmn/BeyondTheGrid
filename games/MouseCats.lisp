@@ -2,6 +2,7 @@
 	(speed 1.0)
 	(sphere 0.3)
 	(color "fff1e8")
+	(onCollision (if (Cat #0) (damage self 1.0 #0)))
 
 	(sensor cat (closest self Cat all))
 	(functions raydist turn rundist)
@@ -33,13 +34,7 @@
 	)
 )
 
-(onFrame (foreach Mouse (reward Mouse 1.0)))
-(onCollision
-	(if
-		(and (Mouse #0) (Cat #1))
-		(damage #0 1.0 #1)
-	)
-)
+(onFrame (foreach Mouse (reward 1.0)))
 
 (setsize 9 9)
 (player Mouse)

@@ -5,7 +5,7 @@
 	(color "442434")
 
 	(onFrame (changeTileTo "E"))
-	(onCollisionWith (if (Cheese #0) (seq (destroy #0) (reward 1.0) (create Cheese) (par "E" "G"))))
+	(onCollision (if (Cheese #0) (seq (destroy #0) (reward 1.0) (create Cheese) (par "E" "G"))))
 
 	(sensor goal (closest self Cheese allVisible) visual)
 	(functions tile raydist gap)

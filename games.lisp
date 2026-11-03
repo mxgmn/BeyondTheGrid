@@ -1,7 +1,7 @@
 ;(real "Vacuum" (numSeeds 50) (length 20) (maxLength 29))
 ;(real "Lawnmower" (numSeeds 50) (length 18) (maxLength 25))
 
-(real "Chase" (numSeeds 50) (length 15) (minLength 21) (maxLength 21))
+;(real "Chase" (numSeeds 50) (length 15) (minLength 21) (maxLength 21))
 ;(search "ButtonCheese" (numSeeds 50) (maxLength 19))
 ;(search "ProtectTheChild" (numSeeds 50) (maxLength 23))
 
@@ -15,4 +15,4 @@
 ;(real "Hide" (numSeeds 50) (length 13) (maxLength 19))
 
 ;(real "Dodgeball" (numSeeds 10) (length 16) (maxLength 22))
-;(real "Football" (steps 10800) (numSeeds 5) (length 8) (maxLength 10))
+(real "Football" (steps 10800) (numSeeds 5) (length 8) (maxLength 10))
