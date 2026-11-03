@@ -4,7 +4,7 @@
 
 	(functions tile raydist)
 
-	(onFrame (if (changeTileTo "E") (reward Robot 1.0)))
+	(onFrame (if (changeTileTo "E") (reward 1.0)))
 
 	;(go (dir self))
 	(if (tile (maxDirection (raydist #0))) (go (left (- (maxDirection (* (raydist #0) (alignment #0 (left (dir self))))) (dir self)))) (if (tile (dir self)) (go (dir self)) (go (maxDirection (raydist #0)))))

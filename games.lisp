@@ -1,14 +1,14 @@
 ;(real "Vacuum" (numSeeds 50) (length 20) (maxLength 29))
 ;(real "Lawnmower" (numSeeds 50) (length 18) (maxLength 25))
 
-;(real "Chase" (numSeeds 50) (length 15) (minLength 21) (maxLength 21))
+(real "Chase" (numSeeds 50) (length 15) (minLength 21) (maxLength 21))
 ;(search "ButtonCheese" (numSeeds 50) (maxLength 19))
 ;(search "ProtectTheChild" (numSeeds 50) (maxLength 23))
 
 ;(real "MouseCats" (numSeeds 50) (length 17) (maxLength 23))
 ;(real "MouseCheeseCats" (numSeeds 5) (length 17) (maxLength 20))
 ;(real "ButtonCats" (numSeeds 5) (length 17) (maxLength 19))
-(real "ButtonCheeseCats" (numSeeds 5) (maxLength 18))
+;(real "ButtonCheeseCats" (numSeeds 5) (maxLength 18))
 
 ;(search "Pathfinding" (numSeeds 5) (maxLength 20))
 ;(real "Seek" (numSeeds 50) (length 14) (maxLength 19))
